@@ -1,0 +1,1459 @@
+{
+  "name": "BFL_hackathon",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "o3-mini",
+          "mode": "list",
+          "cachedResultName": "o3-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1072,
+        1232
+      ],
+      "id": "c41c55f6-5a77-43ba-9cd2-54e332a74c22",
+      "name": "o3-mini1",
+      "credentials": {
+        "openAiApi": {
+          "id": "sA1GAZ4kjXyTMi2t",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Role: You are a creative director for our travel agency.\n\nTasks: \nReview incoming Google Trends contents and pick five interesting destinations and topics to continue to inspire the people based on the trends.\n\nReturn content title, content summary starting with benefit and reasoning, prompt to generate the related image.\n\nSuccess Criteris:\nImage prompt has a specific regulation on 'no text on the image'\n\nSpecial Rule:\nI want to avoide any sensitive topics, do not include the place where the huge political conflict or war related area.\n\n{{ JSON.stringify($json.data) }}\n\n\n\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        1120,
+        1024
+      ],
+      "id": "c497ae5a-c2fa-4e7a-82af-e0db82ae2983",
+      "name": "writing agent-newsletter"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"$id\": \"https://example.com/creative-news-items.schema.json\",\n  \"title\": \"Creative News Items\",\n  \"description\": \"A flexible list of items, each with a content title, summary, and image-generation prompt.\",\n  \"type\": \"array\",\n  \"minItems\": 1,\n  \"items\": {\n    \"type\": \"object\",\n    \"additionalProperties\": false,\n    \"required\": [\n      \"Content Title\",\n      \"Content Summary\",\n      \"Image Generation Prompt\"\n    ],\n    \"properties\": {\n      \"Content Title\": {\n        \"type\": \"string\",\n        \"minLength\": 1,\n        \"description\": \"Short, human-readable headline for the item.\"\n      },\n      \"Content Summary\": {\n        \"type\": \"string\",\n        \"minLength\": 1,\n        \"description\": \"1–3 sentence summary of the news/content.\"\n      },\n      \"Image Generation Prompt\": {\n        \"type\": \"string\",\n        \"minLength\": 1,\n        \"description\": \"Clear prompt describing the image to generate.\"\n      }\n    }\n  }\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1312,
+        1232
+      ],
+      "id": "09b82406-c580-4335-99b8-19908143f52a",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.result.sample }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3024,
+        1008
+      ],
+      "id": "54b985e8-62e4-440c-90e5-5ad3f3631692",
+      "name": "Get Result1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Start FLUX Generation Job1').item.json.polling_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2336,
+        1024
+      ],
+      "id": "cdd0ef12-66a0-4885-9429-e12b87971d6e",
+      "name": "Do the Polling1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "vqgU2LEDmOsF6IGs",
+          "name": "BLF_Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d35ae158-063c-49e6-a13b-3c7fe086534f",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "=Ready",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2768,
+        1024
+      ],
+      "id": "be37ec64-7d1e-42f5-a1cc-dcead34d7128",
+      "name": "Is it ready?1"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2784,
+        1248
+      ],
+      "id": "e61f941c-95ea-48b3-8cdc-60d890a77c59",
+      "name": "Wait1",
+      "webhookId": "b7b3b366-8210-4e20-883f-a959eeb6ee1b"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.bfl.ai/v1/flux-kontext-pro",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "={{ $json.prompt }}"
+            },
+            {
+              "name": "aspect_ratio",
+              "value": "1:1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1952,
+        1024
+      ],
+      "id": "c22c05c2-43ef-4c8f-a7c6-200cee6a3bb3",
+      "name": "Start FLUX Generation Job1",
+      "executeOnce": false,
+      "retryOnFail": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "vqgU2LEDmOsF6IGs",
+          "name": "BLF_Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## ✨ Get the Result\n",
+        "height": 256,
+        "width": 256,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1872,
+        960
+      ],
+      "typeVersion": 1,
+      "id": "6f64f84c-cee6-46e6-87fa-3d72b12149c9",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        1024
+      ],
+      "id": "50f11e28-e69c-495b-a239-ffea085ec31f",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4b4320ed-2827-4a37-b456-3755c6171469",
+              "name": "title",
+              "value": "={{ $json['Content Title'] }}",
+              "type": "string"
+            },
+            {
+              "id": "30a1fe0e-d80d-441d-90de-1e1ca4d4eeb2",
+              "name": "summary",
+              "value": "={{ $json['Content Summary'] }}",
+              "type": "string"
+            },
+            {
+              "id": "dc22d5b2-22f7-4ad8-9eb5-004c5ff8ff56",
+              "name": "prompt",
+              "value": "={{ $json['Image Generation Prompt'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1696,
+        1024
+      ],
+      "id": "b3958309-8a19-4ca7-8dd0-992f71311eb7",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "555e112e-b4fb-4385-9ed0-49ef76cab0c2",
+              "name": "title",
+              "value": "={{ $('Edit Fields1').item.json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "2d771025-3094-4583-a8ad-c7ed62767e45",
+              "name": "summary",
+              "value": "={{ $('Edit Fields1').item.json.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "79891f53-7cdc-40f7-8ed2-7d394e1d24e3",
+              "name": "prompt",
+              "value": "={{$json.result?.prompt || $json[\"Image Generation Prompt\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "1b147a4a-8046-4061-8815-071384a246f5",
+              "name": "imageUrl",
+              "value": "={{$json.result.sample}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3232,
+        1008
+      ],
+      "id": "640fd317-c535-40e9-aed8-5e529213727b",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appJEszJZpP5POft5",
+          "mode": "list",
+          "cachedResultName": "BFL-n8n",
+          "cachedResultUrl": "https://airtable.com/appJEszJZpP5POft5"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl3uAq2azWT0kkx3",
+          "mode": "list",
+          "cachedResultName": "contentLog",
+          "cachedResultUrl": "https://airtable.com/appJEszJZpP5POft5/tbl3uAq2azWT0kkx3"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "uid": "={{$now.format('WWcccHHMM')}}",
+            "title": "={{ $json.title }}",
+            "summary": "={{ $json.summary }}",
+            "imgUrl": "=[\n  {\n    \"url\": \"{{$json.imageUrl}}\",\n    \"filename\": \"{{ (($json['Content Title'] || 'image') + '.jpg').replace(/[\\\\/:*?\\\"<>|]/g, '_') }}\"\n  }\n]\n",
+            "status": "drafted",
+            "prompt": "={{ $json.prompt }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "uid",
+              "displayName": "uid",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "prompt",
+              "displayName": "prompt",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "imgUrl",
+              "displayName": "imgUrl",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "drafted",
+                  "value": "drafted"
+                },
+                {
+                  "name": "refined",
+                  "value": "refined"
+                },
+                {
+                  "name": "selected",
+                  "value": "selected"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        3632,
+        816
+      ],
+      "id": "dc630ab2-6618-4ae4-ae16-1584ddd01b47",
+      "name": "Create a record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "JgbP6mW6xBF7Rk7O",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3632,
+        1008
+      ],
+      "id": "73ee58c1-2d86-4f09-b1e5-d5308c412521",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "content": "## Data in Airtale is created",
+        "height": 288,
+        "width": 304
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3536,
+        688
+      ],
+      "typeVersion": 1,
+      "id": "9cf8852c-8536-4566-86dd-ba8a70a0c702",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "toRecipients": "jeongwoo@duck.com",
+        "subject": "BFL - n8n Approval",
+        "message": "=Hi,\n\nplease select images to continue.\n{{ $json.html }}",
+        "responseType": "customForm",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Select image to get more inspiration",
+              "fieldType": "number",
+              "placeholder": "e.g., 1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        4080,
+        1008
+      ],
+      "id": "538898c5-af65-44d8-80a1-87a4da4798fb",
+      "name": "Send message and wait for response",
+      "webhookId": "959b6c2e-9b66-45b9-92bd-0b52a0f45a2f",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "loK42q4gvE6cAkYp",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ====== CONFIGURE ======\nconst SUBJECT = \"Daily Creative Preview\";\nconst LOGO_URL = \"\"; // optional, e.g. https://your.cdn/logo.png\n// =======================\n\nconst payload = $json; // Aggregate node produced one item with { data: [...] }\nconst items = Array.isArray(payload.data) ? payload.data : [];\n\nconst esc = (s=\"\") => String(s)\n  .replace(/&/g,\"&amp;\")\n  .replace(/</g,\"&lt;\")\n  .replace(/>/g,\"&gt;\")\n  .replace(/\"/g,\"&quot;\")\n  .replace(/'/g,\"&#39;\");\n\nconst cardsHtml = items.map((it, idx) => {\n  const uid = it.uid || `${Date.now()}-${idx+1}`;\n  const displayIndex = idx + 1;\n\n  return `\n    <tr>\n      <td style=\"padding:18px 0;border-top:1px solid #e6e6e9;\">\n        <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n          <!-- Number heading above image -->\n          <tr>\n            <td>\n              <div style=\"font:700 22px/1.25 Segoe UI,Arial,sans-serif;color:#111827;margin:0 0 8px 0;\">\n                ${esc(String(displayIndex))}.\n              </div>\n            </td>\n          </tr>\n\n          ${it.imageUrl ? `\n          <tr>\n            <td>\n              <a href=\"${esc(it.imageUrl)}\" target=\"_blank\" style=\"text-decoration:none;border:0;display:block;\">\n                <img src=\"${esc(it.imageUrl)}\" alt=\"${esc(it.title || 'Creative image')}\"\n                     width=\"648\" style=\"width:100%;max-width:648px;height:auto;border:0;display:block;\">\n              </a>\n            </td>\n          </tr>` : ``}\n\n          <tr>\n            <td style=\"padding-top:12px;\">\n              <h3 style=\"margin:0 0 6px 0;font:700 18px/1.3 Segoe UI,Arial,sans-serif;color:#111827;\">\n                ${esc(it.title || `Item ${displayIndex}`)}\n              </h3>\n              <p style=\"margin:0 0 8px 0;font:400 14px/1.6 Segoe UI,Arial,sans-serif;color:#374151;\">\n                ${esc(it.summary || \"\")}\n              </p>\n              <div style=\"margin:8px 0 0 0;background:#f8fafc;border:1px solid #e5e7eb;border-radius:6px;padding:10px;\">\n                <div style=\"font:700 12px Segoe UI,Arial,sans-serif;color:#6b7280;margin-bottom:4px;\">Prompt</div>\n                <div style=\"font:400 12px/1.5 Segoe UI,Arial,sans-serif;color:#6b7280;white-space:pre-wrap;\">\n                  ${esc(it.prompt || \"\")}\n                </div>\n              </div>\n              <p style=\"margin:10px 0 0 0;font:400 11px/1.4 Segoe UI,Arial,sans-serif;color:#9ca3af;\">\n                ID: ${esc(uid)}\n              </p>\n            </td>\n          </tr>\n        </table>\n      </td>\n    </tr>\n  `;\n}).join(\"\") || `\n  <tr><td style=\"padding:24px;color:#6b7280;font:400 14px Segoe UI,Arial,sans-serif;\">\n    No items to display.\n  </td></tr>\n`;\n\nconst html = `\n<!doctype html>\n<html><head>\n<meta charset=\"utf-8\"><meta http-equiv=\"x-ua-compatible\" content=\"ie=edge\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>${esc(SUBJECT)}</title>\n</head>\n<body style=\"margin:0;padding:0;background:#f4f5f7;\">\n<center style=\"width:100%;background:#f4f5f7;\">\n  <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n    <tr><td align=\"center\" style=\"padding:24px 12px;\">\n      <table role=\"presentation\" width=\"680\" style=\"width:100%;max-width:680px;background:#ffffff;border:1px solid #e6e6e9;border-radius:8px;\">\n        <tr>\n          <td style=\"padding:20px 24px;border-bottom:1px solid #e6e6e9;\">\n            <table role=\"presentation\" width=\"100%\"><tr>\n              <td align=\"left\" style=\"font:700 20px/1.2 Segoe UI,Arial,sans-serif;color:#111827;\">\n                ${esc(SUBJECT)}\n              </td>\n              ${LOGO_URL ? `<td align=\"right\"><img src=\"${esc(LOGO_URL)}\" width=\"120\" style=\"max-width:120px;height:auto;border:0;\"></td>` : ``}\n            </tr></table>\n          </td>\n        </tr>\n        <tr><td style=\"padding:0 24px 4px 24px;\">\n          <p style=\"margin:16px 0 0 0;font:400 14px/1.6 Segoe UI,Arial,sans-serif;color:#374151;\">\n            Here are today’s creatives. Click any image to view it full-size.\n          </p>\n        </td></tr>\n\n        ${cardsHtml}\n\n        <tr><td style=\"padding:16px 24px;border-top:1px solid #e6e6e9;\">\n          <p style=\"margin:0;font:400 12px/1.6 Segoe UI,Arial,sans-serif;color:#6b7280;\">\n            Preview links may expire; open the image first if needed. Reply to this email with feedback.\n          </p>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</center>\n</body></html>\n`;\n\n// Return subject + html for the email node\nreturn [{ json: { subject: SUBJECT, html } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3872,
+        1008
+      ],
+      "id": "90cfb10a-6a41-4c94-921b-f03bd9a1b169",
+      "name": "Code"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        64,
+        1200
+      ],
+      "id": "c5e9cc63-bd0c-4404-9c55-81c18aa35795",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://trends.google.com/trending/rss?geo=DE",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        384,
+        928
+      ],
+      "id": "1d479b3c-98a3-4b14-b54f-d0f999cfe6fc",
+      "name": "Google Trends 1",
+      "notesInFlow": true,
+      "notes": "Germany"
+    },
+    {
+      "parameters": {
+        "url": "https://trends.google.com/trending/rss?geo=FR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        384,
+        1120
+      ],
+      "id": "2108ef5a-0ef3-4dc9-b5ca-97e8455759a1",
+      "name": "Google Trends 2",
+      "notesInFlow": true,
+      "notes": "France"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        672,
+        1024
+      ],
+      "id": "c831c29c-803c-4f79-9b71-2f0735a042bd",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        880,
+        1024
+      ],
+      "id": "05a360dc-c3da-4d25-ba85-e7abd37811ed",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "url": "https://feeds.feedburner.com/breakingtravelnews/news/airline",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        384,
+        1312
+      ],
+      "id": "3548cbb4-193b-4fc7-802e-a529a118fcd7",
+      "name": "Airline Breaking News"
+    },
+    {
+      "parameters": {
+        "url": "https://feeds.feedburner.com/breakingtravelnews/news/tourism",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        384,
+        1520
+      ],
+      "id": "08983c48-7461-40d9-b68d-583eaf9bb693",
+      "name": "Tourism Breaking News"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.result.sample }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6608,
+        1184
+      ],
+      "id": "33334e9f-e79e-4cd8-8258-64b867012bc9",
+      "name": "Get Result"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Start FLUX Generation Job').item.json.polling_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6112,
+        1200
+      ],
+      "id": "016e6eca-71b1-4b31-87cb-18394a2680ba",
+      "name": "Do the Polling",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "vqgU2LEDmOsF6IGs",
+          "name": "BLF_Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d35ae158-063c-49e6-a13b-3c7fe086534f",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "=Ready",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        6336,
+        1200
+      ],
+      "id": "ffb22e27-dd17-4377-81bd-a71a89a4f8a7",
+      "name": "Is it ready?"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        6352,
+        1424
+      ],
+      "id": "fbd63fd0-2502-4318-bb41-3309834bb7a2",
+      "name": "Wait",
+      "webhookId": "b7b3b366-8210-4e20-883f-a959eeb6ee1b"
+    },
+    {
+      "parameters": {
+        "content": "## ✨ Your Travel Story generates here\n",
+        "height": 496,
+        "width": 656,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4880,
+        1264
+      ],
+      "typeVersion": 1,
+      "id": "149e194e-431a-4bcf-b63a-91438506d606",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6ffd44b2-141e-4be0-8a3a-add719b2d8d9",
+              "name": "=continue",
+              "value": "={{ $json.data[\"Select image to get more inspiration\"] }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4288,
+        1008
+      ],
+      "id": "cd11b68b-a139-4f67-88c9-4f1db5d1bdc7",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const PICK_NODE = \"Edit Fields3\";   // has { continue: \"5\" }\nconst SOURCE_NODE = \"Edit Fields2\";    // produced the list to choose from\n\nconst pick = Number($node[PICK_NODE].json.continue); // 1-based\nconst items = $items(SOURCE_NODE);\n\nif (!Number.isFinite(pick) || items.length === 0) return [];\nconst idx = Math.min(Math.max(0, pick - 1), items.length - 1);\n\nconst chosen = items[idx].json;\n\nconst safeName = ((chosen[\"Content Title\"] || \"image\") + \".jpg\")\n  .replace(/[\\\\/:*?\"<>|]/g, \"_\");\n\nreturn [{\n  json: {\n    title: chosen[\"Content Title\"],\n    summary: chosen[\"Content Summary\"],\n    prompt: chosen[\"Image Generation Prompt\"] || chosen.prompt,\n    imageUrl: chosen.imageUrl || chosen.result?.sample, // works for both shapes\n    filename: safeName,\n    uid: chosen.id || `${Date.now()}-${idx+1}`\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4496,
+        1008
+      ],
+      "id": "769ef8c1-7be6-407a-92d7-e840b174d754",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "content": "## Data & Inspiration Sourcing Every 5PM of the day.\n\n- Germany Google Trends\n- France Google Trends\n- Airline Breaking News RSS Feed\n- Tourism Breaking News RSS Feed",
+        "height": 960,
+        "width": 1008
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        16,
+        784
+      ],
+      "typeVersion": 1,
+      "id": "ebd2a201-6669-4338-93a9-5e1294d9cdab",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Welcome to my Travel Imagination Gini Newsletter n8n automation template\n\n# AI-Powered Travel Newsletter Automation (n8n Template)\n\n> This n8n template automates the creation of an AI-powered travel newsletter by analyzing trends and news, with a human-in-the-loop approval process.\n\nThis repository contains an n8n automation template designed to generate content for a travel newsletter. It automates the entire workflow from idea generation to content creation and visual storytelling.\n\n## How It Works\n\nThe workflow is broken down into the following automated steps:\n\n1.  **Data Aggregation**\n    * Scans Google Trends for trending travel topics in Germany and France.\n    * Collects breaking airline news (e.g., fare discounts, new routes) and tourism updates (e.g., local events, demonstrations).\n\n2.  **AI Content Generation**\n    * An OpenAI model processes the aggregated data to generate a title, summary, and a compelling benefit (e.g., \"Why you should consider this destination\").\n    * All generated content is saved to a primary table in Airtable, tagged with the week number and day for tracking.\n\n3.  **Human-in-the-Loop (HITL) Approval**\n    * The system sends an email notification via Outlook with the proposed destinations, allowing a human to review the content.\n    * The user selects the most attractive destination, and this choice is updated in Airtable with a \"selected\" status.\n    * *Note: The Outlook node can easily be swapped for Gmail or another email service.*\n\n4.  **AI Image Storytelling**\n    * Once a destination is marked as \"selected,\" its data is sent to Flux Kontext.\n    * Flux Kontext edits the source material and generates a series of images to create a visual story.\n    * The newly created images are saved to a separate table in the same Airtable base, linked to the selected destination.\n\n## Technology Stack\n\n* **Automation:** n8n\n* **Data Storage:** Airtable\n* **AI Content:** OpenAI\n* **Notifications (HITL):** Outlook\n* **Image Generation:** Flux Kontext\n\n## Link to public repo: \nhttps://github.com/Jeo-Jang/n8n-BFL-hackathon\n\n## Let's connect, \nI write news letters and share usefull tips and trends related to Generative AI & Business Ingiths on linkedin. https://www.linkedin.com/in/jeongwoo-jang/\n\n",
+        "height": 1408,
+        "width": 656,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -688,
+        784
+      ],
+      "typeVersion": 1,
+      "id": "730ddcce-5934-4ca3-a2f8-66b704e3a249",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "o3-mini",
+          "mode": "list",
+          "cachedResultName": "o3-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        4960,
+        1536
+      ],
+      "id": "33176980-ea3e-47aa-8c82-196dccca986f",
+      "name": "o3-mini",
+      "credentials": {
+        "openAiApi": {
+          "id": "sA1GAZ4kjXyTMi2t",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Role:\nYou are an expert in travel planning. \n\nTasks:\nReview the text that I am giving, \ncreate a list of three different prompt for image generation.\n\nSuccess Criteria:\nEach image concept must be related to the main input, and also chronical, as in you could think of day1 or day2 etc.\n\nInput:\n{{ $json.fields.title }}\n{{ $json.fields.summary }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=Use the provided tools to research the topic based on latest information.  Todays date is {{ $now }}"
+        }
+      },
+      "id": "f5ade0e9-81c1-4405-89c6-4bbe3a4ddc72",
+      "name": "TravelStory",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        4960,
+        1344
+      ],
+      "retryOnFail": true,
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"type\": \"object\",\n  \"required\": [\"prompts\"],\n  \"additionalProperties\": false,\n  \"properties\": {\n    \"prompts\": {\n      \"type\": \"array\",\n      \"minItems\": 3,\n      \"maxItems\": 3,\n      \"items\": { \"type\": \"string\", \"minLength\": 1 }\n    }\n  }\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        5136,
+        1552
+      ],
+      "id": "10cc99a7-4c9c-4a62-9934-1f530f4b62aa",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.prompts",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        5264,
+        1344
+      ],
+      "id": "cf7fe978-eba3-4ac5-a717-0658f9838c69",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.bfl.ai/v1/flux-kontext-pro",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "={{ $json['output.prompts'] }}"
+            },
+            {
+              "name": "aspect_ratio",
+              "value": "1:1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5808,
+        1344
+      ],
+      "id": "21f4cf33-3a72-4537-b91d-374bd129a7e2",
+      "name": "Start FLUX Generation Job",
+      "executeOnce": false,
+      "retryOnFail": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "vqgU2LEDmOsF6IGs",
+          "name": "BLF_Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "79891f53-7cdc-40f7-8ed2-7d394e1d24e3",
+              "name": "prompt",
+              "value": "={{$json.result?.prompt || $json[\"Image Generation Prompt\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "1b147a4a-8046-4061-8815-071384a246f5",
+              "name": "imageUrl",
+              "value": "={{$json.result.sample}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6880,
+        1184
+      ],
+      "id": "e74ab1cc-a02f-457f-8a33-e3e29cd5fd9b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appJEszJZpP5POft5",
+          "mode": "list",
+          "cachedResultName": "BFL-n8n",
+          "cachedResultUrl": "https://airtable.com/appJEszJZpP5POft5"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl3uAq2azWT0kkx3",
+          "mode": "list",
+          "cachedResultName": "contentLog",
+          "cachedResultUrl": "https://airtable.com/appJEszJZpP5POft5/tbl3uAq2azWT0kkx3"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "uid": "={{$now.format('WWcccHHMM')}}",
+            "imgUrl": "=[\n  {\n    \"url\": \"{{$json.imageUrl}}\",\n    \"filename\": \"{{ (($json['Content Title'] || 'image') + '.jpg').replace(/[\\\\/:*?\\\"<>|]/g, '_') }}\"\n  }\n]\n",
+            "status": "selected",
+            "prompt": "={{ $json.prompt }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "uid",
+              "displayName": "uid",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "prompt",
+              "displayName": "prompt",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "imgUrl",
+              "displayName": "imgUrl",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "drafted",
+                  "value": "drafted"
+                },
+                {
+                  "name": "refined",
+                  "value": "refined"
+                },
+                {
+                  "name": "selected",
+                  "value": "selected"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        7104,
+        1184
+      ],
+      "id": "d95a2462-319c-412c-8714-39a5c19fd265",
+      "name": "Create a record1",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "JgbP6mW6xBF7Rk7O",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "o3-mini1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "writing agent-newsletter",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "writing agent-newsletter",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Do the Polling1": {
+      "main": [
+        [
+          {
+            "node": "Is it ready?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is it ready?1": {
+      "main": [
+        [
+          {
+            "node": "Get Result1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Do the Polling1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start FLUX Generation Job1": {
+      "main": [
+        [
+          {
+            "node": "Do the Polling1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "writing agent-newsletter": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Start FLUX Generation Job1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Result1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Create a record",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a record": {
+      "main": [
+        []
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Google Trends 1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Trends 2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Airline Breaking News",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Tourism Breaking News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Trends 1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Trends 2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "writing agent-newsletter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airline Breaking News": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Tourism Breaking News": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Do the Polling": {
+      "main": [
+        [
+          {
+            "node": "Is it ready?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is it ready?": {
+      "main": [
+        [
+          {
+            "node": "Get Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Do the Polling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "TravelStory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "o3-mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "TravelStory",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "TravelStory",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TravelStory": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Start FLUX Generation Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start FLUX Generation Job": {
+      "main": [
+        [
+          {
+            "node": "Do the Polling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Create a record1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Result": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "de5ac552-034b-4e38-ab0e-56287bd65c31",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "745fac872ca94a08928665624c0e40e856853b19649ee046d7ebf40550f1f107"
+  },
+  "id": "LCyMkRcLytKUJW06",
+  "tags": []
+}
