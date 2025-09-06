@@ -2,38 +2,58 @@
 06September2025, Creative AI hackathon submission repo
 
 
-# AI-Powered Travel Newsletter Automation (n8n Template)
+# AI-Powered Travel Newsletter Automation
 
-> This n8n template automates the creation of an AI-powered travel newsletter by analyzing trends and news, with a human-in-the-loop approval process.
+This repository contains an n8n template that automates the generation of a travel newsletter using AI, from idea sourcing to visual storytelling.
 
-This repository contains an n8n automation template designed to generate content for a travel newsletter. It automates the entire workflow from idea generation to content creation and visual storytelling.
+---
 
-## How It Works
+### 🚀 Project Overview
 
-The workflow is broken down into the following automated steps:
+This project demonstrates how to connect an **n8n** automation workflow with services like **OpenAI** and **Airtable** to create a fully automated content pipeline for a travel newsletter.
 
-1.  **Data Aggregation**
-    * Scans Google Trends for trending travel topics in Germany and France.
-    * Collects breaking airline news (e.g., fare discounts, new routes) and tourism updates (e.g., local events, demonstrations).
+**What it does:**
+* Scans Google Trends (in Germany & France) and other news sources for potential travel ideas.
+* Passes the data to an **OpenAI** model to generate a title, summary, and recommendation for each destination.
+* Saves the generated content to an **Airtable** base for tracking.
+* Sends a summary email via **Outlook** for human review and selection (Human-in-the-Loop).
+* Triggers **Flux Kontext** to generate a visual story once a destination is approved.
+* Saves the final images back to a separate table in Airtable.
 
-2.  **AI Content Generation**
-    * An OpenAI model processes the aggregated data to generate a title, summary, and a compelling benefit (e.g., "Why you should consider this destination").
-    * All generated content is saved to a primary table in Airtable, tagged with the week number and day for tracking.
+---
 
-3.  **Human-in-the-Loop (HITL) Approval**
-    * The system sends an email notification via Outlook with the proposed destinations, allowing a human to review the content.
-    * The user selects the most attractive destination, and this choice is updated in Airtable with a "selected" status.
-    * *Note: The Outlook node can easily be swapped for Gmail or another email service.*
+### 🛠️ Setup Instructions
 
-4.  **AI Image Storytelling**
-    * Once a destination is marked as "selected," its data is sent to Flux Kontext.
-    * Flux Kontext edits the source material and generates a series of images to create a visual story.
-    * The newly created images are saved to a separate table in the same Airtable base, linked to the selected destination.
+#### Requirements
 
-## Technology Stack
+You will need accounts and API keys for the following services to use this template.
 
-* **Automation:** n8n
-* **Data Storage:** Airtable
-* **AI Content:** OpenAI
-* **Notifications (HITL):** Outlook
-* **Image Generation:** Flux Kontext
+* **n8n** (a self-hosted instance or an n8n cloud account).
+* **Airtable Account**: You will need an API key and a Base ID. You can get your API key from your [Airtable account settings](https://airtable.com/account).
+* **OpenAI API Key**: You can get an API key from the [OpenAI Platform](https://platform.openai.com/api-keys).
+* **Outlook Account** (or Gmail) for the human-in-the-loop approval step.
+* **Access to Flux Kontext** for the final image generation step.
+
+#### Steps
+
+1.  **Set up Airtable**
+    * Create a new Airtable Base for this project.
+    * Create two tables inside it: a table for `Generated Content` and another for `Generated Images`.
+    * In the `Generated Content` table, create fields for `Title`, `Summary`, `Recommendation`, and `Status` (a single-select field with options like "Pending" and "Selected").
+
+3.  **Import the Workflow into n8n**
+    * Open your n8n canvas.
+    * Select "Import from File" and choose the `BFL_hackathon_Jeongwoo.json` file from this repository.
+
+4.  **Configure n8n Credentials**
+    * In your n8n instance, go to the "Credentials" section from the sidebar.
+    * Add new credentials for **Airtable** and **OpenAI** using the API keys you obtained in the requirements step.
+
+5.  **Update the Workflow Nodes**
+    * Open the imported workflow on your canvas.
+    * Double-click on each **Airtable node** and configure it: select your credentials, and input the correct Base ID and Table Name.
+    * Select your credentials for the **OpenAI node**.
+    * Update the **Outlook (or Email) node** with your email address for receiving review notifications.
+
+6.  **Activate the Workflow**
+    * Click the "Save" button and then toggle the workflow to "Active". Your automated newsletter agent is now ready!
